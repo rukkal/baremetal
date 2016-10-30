@@ -10,5 +10,3 @@
 .long MAGIC
 .long FLAGS
 .long CHECKSUM
-.global _start
-.type _start, @function

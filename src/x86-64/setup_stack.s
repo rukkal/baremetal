@@ -6,11 +6,11 @@ stack_top:
 
 .section .text
 .code32
+.global _start
+.type _start, @function
 
 _start:
 	mov $stack_top, %esp
-	call kernel_main
-1:	hlt
-	jmp 1b
+	call setup_cpu
 
 .size _start, . - _start
