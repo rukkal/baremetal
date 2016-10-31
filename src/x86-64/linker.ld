@@ -13,23 +13,23 @@ SECTIONS
     /* let's put other sections at 1MB (bootloaders usually put kernels at that place) */
     . = 1M;
    
-	.text BLOCK(4K) : ALIGN(4K)
+	.text BLOCK(4000K) : ALIGN(4K)
 	{
         *(EXCLUDE_FILE(*multiboot_header.o) .text)
 		*(.text)
 	}
 
-	.rodata BLOCK(4K) : ALIGN(4K)
+	.rodata BLOCK(4000K) : ALIGN(4K)
 	{
 		*(.rodata)
 	}
 
-	.data BLOCK(4K) : ALIGN(4K)
+	.data BLOCK(4000K) : ALIGN(4K)
 	{
 		*(.data)
 	}
 
-	.bss BLOCK(4K) : ALIGN(4K)
+	.bss BLOCK(4000K) : ALIGN(4K)
 	{
 		*(COMMON)
 		*(.bss)
