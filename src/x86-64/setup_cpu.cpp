@@ -2,36 +2,31 @@
 
 extern void kernel_main();
 
-void panic()
-{
-   terminal{}.write_line("kernel panic");
-   asm volatile("cli"); //disable interrupts
-   volatile bool forever=true;
-   while(forever)
-       ;
-}
-
 class cpu_configuration
 {
 public:
     void run()
     {
         term.initialize_screen();
-        check_cpuid();
-        setup_long_mode();
-    }
-
-    void check_cpuid()
-    {
-        if(!is_cpuid_supported())
+        
+        if(!cpu_supports_cpuid())
         {
-            term.write_line("CPU doesn't support CPUID");
-            panic();
+            panic("cpu doesn't support CPUID");
         }
-        //TODO: check is x86_64
+        term.write_line("CPUID support detected");
+        
+        if(!cpu_supports_long_mode())
+        {
+            panic("cpu doesn't support long mode");
+        }
+        term.write_line("long mode support detected");
+        
+        setup_long_mode();
+        term.write_line("switched to long mode");
     }
 
-    bool is_cpuid_supported() const
+private:
+    bool cpu_supports_cpuid()
     {
         uint32_t zero_if_cpuid_not_supported;
         
@@ -53,13 +48,45 @@ public:
 
         return zero_if_cpuid_not_supported != 0;
     }
+     
+    bool cpu_supports_long_mode()
+    {
+        uint32_t cpu_id_response=0;
+
+        //check that intel extended functions are supported (necessary to detect long mode support)
+        asm volatile("mov $0x80000000, %%eax; cpuid": "=a" (cpu_id_response) : : "ebx", "ecx", "edx");
+        if(cpu_id_response < 0x80000001)
+        {
+            return false;
+        }
+        
+        //check that long mode is supported
+        asm volatile("mov $0x80000001, %%eax; cpuid": "=d" (cpu_id_response) : : "eax", "ebx", "ecx");
+        if((cpu_id_response & (1<<29)) == 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     void setup_long_mode()
     {
-	    term.write_line("Setting up CPU long mode...");
+	    term.write_line("setting up CPU long mode...");
         //TODO
     }
 
+    void panic(const char* message)
+    {
+       term.write_line("kernel panic!");
+       term.write_line("reason:");
+       term.write_line(message);
+       asm volatile("cli"); //disable interrupts
+       volatile bool forever=true;
+       while(forever)
+           ;
+    }
+    
 private:
     terminal term;
 };
